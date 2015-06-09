@@ -8,15 +8,15 @@
 #define DEBUG
 #define DATALOGGER
 
-#define VIBRATION_SWITCH_PIN 2
-#define DHT_PIN 3
+#define VIBRATION_SWITCH_PIN 6
+#define DHT_PIN 5
 #define DHT_TYPE DHT22
 #define CHIP_SELECT_PIN 10
 
-#define THERM_PIN 0
-#define SOLAR_PANEL_PIN 1
-#define PHOTOCELL_PIN 2
-#define TEMP_PIN 3
+#define TEMP_PIN 0
+#define PHOTOCELL_PIN 1
+#define THERM_PIN 2
+#define SOLAR_PANEL_PIN 3
 
 #define THERM_RESISTOR 10000
 #define SOLAR_PANEL_RESISTOR 10000
@@ -26,7 +26,7 @@
 #define THERM_THERM_NOMINAL 10000
 #define THERM_TEMP_NOMINAL 25 // 10000 ohms @ 25 degrees celsius
 
-#define AREF_VOLTAGE 3.3
+#define AREF_VOLTAGE 5
 
 #define ANALOG_READ_STABILITY 10
 #define LOOP_DELAY 30000

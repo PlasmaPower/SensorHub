@@ -13,7 +13,6 @@ The #include means that the code is using other code (libraries) written by othe
 Later, we check if these first two constants are defined
 If they are, we enable certain features
 Think of the first two as off and on statements
-
 DEBUG: Enables logging debug information to the computer
 DATALOGGER: Enables putting data in the SD card
 */
@@ -25,6 +24,7 @@ These constants are tied to values
 They are kept the same throughout the code
 Think of these as boxes with values in them
 */
+
 /*
 This first #define defines the pin that the vibration switch is plugged into
 */
@@ -157,36 +157,36 @@ void setup() {
   #endif
   
   /*
-  If we have turned on the datalogger (defined it), then run the rest of the function
+  If we have turned on the datalogger mode (defined it), then run the rest of the function
   */
   #ifdef DATALOGGER
     /*
-    The first filenumber we try is 0
+    The first filenumber we try to create is DATA0.csv 
     */
     int filenumber = 0;
     /*
-    Repeat the next 8 lines of code until we have found a suitable file name
+    Repeat the next 8 lines of code until we have found a suitable file name ofr our data on the SD card
     */
     while (true) {
       /*
-      Set filenameStr equal to DATA, then the file number, then .CSV
+      Set filename equal to DATA, then the file number, then .CSV 
+      Example "DATA4.CSV 
       */
       String filenameStr = "DATA" + String(filenumber) + ".CSV";
       /*
-      Retrieve the length of the file name
+      Find the length of the file name
       */
       int len = filenameStr.length() + 1;
       /*
-      Create a spot to put the file name
+      Create a label (or plaque) that will hold the filename
       */
       char filename[len];
       /*
-      Put the filename in the spot to put the filename
+      Write the file name on the label (plaque)
       */
       filenameStr.toCharArray(filename, len);
       /*
-      If the the file does not exist yet, we have found a suitable filename
-      Run the next two lines of code
+      If the the file does not exist yet, we have found a suitable filename and we run the next two lines of code
       */
       if (!SD.exists(filename)) {
         /*
@@ -199,6 +199,7 @@ void setup() {
         break;
       }
       /*
+      If the file already exists, the "filenumber++" tries to find another file.
       Move the filenumber up one
       */
       filenumber++;
@@ -208,11 +209,11 @@ void setup() {
     */
     datafile.println("unixTime, dhtHumidity, dhtTemp, thermTemp, solarPanel, photocell, temp");
     /*
-    Begin communicating through the wire
+    Begin communicating through the wire to the SD card and Real Time Clock
     */
     Wire.begin();
     /*
-    Initialize the Real Time Clock. If that fails, then run the next 3 lines of code
+    Start the Real Time Clock. If that fails, then run the next 3 lines of code
     */
     if (!RTC.begin()) {
       /*
@@ -223,7 +224,7 @@ void setup() {
       #endif
     }
     /*
-    Start getting data from the DHT
+    Start getting data from the DHT (Humidity/Temperature Sensor)
     */
     dht.begin();
   #endif
@@ -238,7 +239,7 @@ It makes analogReads (getting values from the sensors) more accurate
 */
 int stableAnalogRead(int pin) {
   /*
-  If we have defined ANALOG_READ_STABILITY, execute the next 2 lines of code
+  If we have switched on (defined) ANALOG_READ_STABILITY, execute the next 2 lines of code
   */
   #ifdef ANALOG_READ_STABILITY
     /*
@@ -260,7 +261,7 @@ This ends the stableAnalogRead function
 */
 
 /*
-This gets the resistance of a resistor
+This gets the resistance of a sensor on a certain pin
 */
 int readResistance(int pin, long resistor) {
   /*
@@ -275,23 +276,22 @@ This gets the voltage of a specified pin
 float readVoltage(int pin) {
   /*
   analogRead reads a value from the sensor, but scales it from 0-1023
-  That should be from 0 volts to the maximum number of volts (the constant in the box AREF_VOLTAGE)
+  It instead should be from 0 volts to the constant AREF_VOLTAGE (maximum number of volts)
   To undo the scaling, we use a ratio
   */
   return stableAnalogRead(pin) * AREF_VOLTAGE / 1023.0;
 }
 
 /*
-If we have switched on the DATALOGGER constand, then make a putData function
+If we have switched on the DATALOGGER constand, then enable the putData function
 */
 #ifdef DATALOGGER
   /*
-  This function puts data in the datalogger function
+  This function puts data in the data file
   */
   void putData(float data[]) {
     /*
-    This calculates the length of an array (a set of values)
-    By dividing the length of the array (a set of values) by the length of a single value
+    This calculates the length of an array (a set of values by dividing the length of the array (a set of values) by the length of a single value
     */
     int len = sizeof(data)/sizeof(*data);
     /*
@@ -299,7 +299,7 @@ If we have switched on the DATALOGGER constand, then make a putData function
     */
     for (int i = 0; i < len; i++) {
       /*
-      This prints the value to the datafile
+      This prints each value to the datafile
       */
       datafile.print(String(data[i]));
       /*
@@ -319,7 +319,7 @@ If we have switched on the DATALOGGER constand, then make a putData function
 
 /*
 This loop function occupies the rest of the code
-All the code runs again as soon as it finishes
+All of this code runs again and again. 
 */
 void loop() {
   /*
@@ -447,7 +447,7 @@ void loop() {
     Serial.println();
   #endif
   /*
-  Wait the constant in the LOOP_DELAY box in seconds, then loop again
+  Wait the constant LOOP_DELAY seconds, then loop again
   */
   delay(LOOP_DELAY);
 }

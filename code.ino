@@ -373,7 +373,7 @@ void loop() {
   /*
   This code asks the vibration switch if there is vibration
   */
-  int vibration = (digitalRead(VIBRATION_SWITCH_PIN) == HIGH) ? 1 : 0;
+  int vibration = digitalRead(VIBRATION_SWITCH_PIN) == HIGH;
   /*
   If the datalogger is installed, get the time and log it
   (The Real Time Clock is part of the datalogger)

@@ -232,51 +232,165 @@ void setup() {
 This ends the setup function
 */
 
+/*
+This is the stableAnalogRead function (a set of commands)
+It makes analogReads (getting values from the sensors) more accurate
+*/
 int stableAnalogRead(int pin) {
- #ifdef ANALOG_READ_STABILITY // From what I've read online, this helps make the next analogRead more accurate
-   analogRead(pin);
-   delay(ANALOG_READ_STABILITY);
- #endif
- return analogRead(pin);
+  /*
+  If we have defined ANALOG_READ_STABILITY, execute the next 2 lines of code
+  */
+  #ifdef ANALOG_READ_STABILITY
+    /*
+    Read a value from the sensor, then do nothing with the value
+    */
+    analogRead(pin);
+    /*
+    Wait for the value in the box ANALOG_READ_STABILITY (a constant) seconds
+    */
+    delay(ANALOG_READ_STABILITY);
+  #endif
+  /*
+  Read a value from the sensor, and send it back to wherever this was used
+  */
+  return analogRead(pin);
 }
+/*
+This ends the stableAnalogRead function
+*/
 
+/*
+This gets the resistance of a resistor
+*/
 int readResistance(int pin, long resistor) {
- return resistor / (1023.0 / stableAnalogRead(pin) - 1); // http://en.wikipedia.org/wiki/Voltage_divider
+  /*
+  This uses the voltage divider forumla to get the resistance of the sensor
+  */
+  return resistor / (1023.0 / stableAnalogRead(pin) - 1);
 }
 
+/*
+This gets the voltage of a specified pin
+*/
 float readVoltage(int pin) {
-  return stableAnalogRead(pin) * AREF_VOLTAGE / 1023.0; // The arduino scales analog inputs from 0-AREF volts to 0 - 1023 for better precision
+  /*
+  analogRead reads a value from the sensor, but scales it from 0-1023
+  That should be from 0 volts to the maximum number of volts (the constant in the box AREF_VOLTAGE)
+  To undo the scaling, we use a ratio
+  */
+  return stableAnalogRead(pin) * AREF_VOLTAGE / 1023.0;
 }
 
+/*
+If we have switched on the DATALOGGER constand, then make a putData function
+*/
 #ifdef DATALOGGER
+  /*
+  This function puts data in the datalogger function
+  */
   void putData(float data[]) {
-    int len = sizeof(data)/sizeof(*data); // This calculates the length of the array by dividing the size of the array by the size of a float
+    /*
+    This calculates the length of an array (a set of values)
+    By dividing the length of the array (a set of values) by the length of a single value
+    */
+    int len = sizeof(data)/sizeof(*data);
+    /*
+    This finds each value in the array (set of values)
+    */
     for (int i = 0; i < len; i++) {
+      /*
+      This prints the value to the datafile
+      */
       datafile.print(String(data[i]));
+      /*
+      We don't want to put a comma at the end
+      If this isn't the last data point
+      Put a comma after it
+      */
       if (i != len - 1) {
         datafile.print(",");
       }
     }
   }
+  /*
+  This ends the putData function
+  */
 #endif
 
+/*
+This loop function occupies the rest of the code
+All the code runs again as soon as it finishes
+*/
 void loop() {
+  /*
+  This code gets the humidity from the DHT
+  */
   float dhtHumidity = dht.readHumidity();
+  /*
+  This code gets the temperature from the DHT
+  */
   float dhtTemperature = dht.readTemperature();
-  float thermTemperature = readResistance(THERM_PIN, THERM_RESISTOR) / THERM_THERM_NOMINAL; // http://en.wikipedia.org/wiki/Steinhart%E2%80%93Hart_equation
+  /*
+  This code gets the temperature from the termistor
+  For more information, see http://en.wikipedia.org/wiki/Steinhart%E2%80%93Hart_equation
+  This first line gets the resistance of the thermistor, then divides it by the constant in the THERM_THERM_NOMINAL box
+  */
+  float thermTemperature = readResistance(THERM_PIN, THERM_RESISTOR) / THERM_THERM_NOMINAL;
+  /*
+  This code sets the temperature equal to the log of the current temperature
+  */
   thermTemperature = log(thermTemperature);
+  /*
+  This code divides the temperature by the number in the THERM_B_COEFFICIENT box
+  */
   thermTemperature /= THERM_B_COEFFICIENT;
+  /*
+  This code adds the inverse of the constant in the THERM_TEMP_NOMINAL box added to 273.15 (negative absolute zero in celcius)
+  */
   thermTemperature += 1.0 / (THERM_TEMP_NOMINAL + 273.15);
+  /*
+  This code inverts the thermistor temperature
+  */
   thermTemperature = 1.0 / thermTemperature;
-  thermTemperature -= 273.15; // From Kelvin to Celsius
-  float solarPanel = readVoltage(SOLAR_PANEL_PIN) * 5 / AREF_VOLTAGE; // Input has a voltage divider lowering it from 0-5V to 0-3.3V
+  /*
+  This code converts the temperature from Kelvin to Celsius by subtracting 273.15
+  */
+  thermTemperature -= 273.15;
+  /*
+  This code reads the voltage on the solar cell
+  The arduino measures voltages from 0 volts to 3.3 volts sometimes, but the solar cell is from 0 volts to 5 volts
+  So we need to scale it with a ratio
+  */
+  float solarPanel = readVoltage(SOLAR_PANEL_PIN) * 5 / AREF_VOLTAGE;
+  /*
+  This code reads the resistance of the photocell
+  */
   float photocell = readResistance(PHOTOCELL_PIN, PHOTOCELL_RESISTOR);
-  float temperature = (readVoltage(TEMP_PIN) - 0.5) * 100; // The voltage has an offset of 0.5V (there is always 0.5V flowing through) and the rest is 1/100th the temperature
-  int vibration = (digitalRead(VIBRATION_SWITCH_PIN) == HIGH) ? 1 : 0; // 1 if there is vibration, 0 if there isn't
+  /*
+  The temperature sensor will always output 0.5 volts, and then every 0.01 volt after that is one degree celcius
+  */
+  float temperature = (readVoltage(TEMP_PIN) - 0.5) * 100;
+  /*
+  This code asks the vibration switch if there is vibration
+  */
+  int vibration = (digitalRead(VIBRATION_SWITCH_PIN) == HIGH) ? 1 : 0;
+  /*
+  If the datalogger is installed, get the time and log it
+  (The Real Time Clock is part of the datalogger)
+  */
   #ifdef DATALOGGER
+    /*
+    This code gets the current time
+    */
     DateTime now = RTC.now();
+    /*
+    The next two lines of code log the time to the datafile
+    */
     datafile.print(now.unixtime());
     datafile.print(",");
+    /*
+    If debug is enabled, log the current date and time to the computer
+    */
     #ifdef DEBUG
       Serial.print(now.year(), DEC);
       Serial.print("/");
@@ -291,11 +405,26 @@ void loop() {
       Serial.print(now.second(), DEC);
       Serial.print(" - ");
     #endif
+    /*
+    Put the data into an array (a list)
+    */
     float data[] = {dhtHumidity, dhtTemperature, thermTemperature, solarPanel, photocell, temperature};
+    /*
+    Put our data into the datafile
+    */
     putData(data);
+    /*
+    Put the vibration sensor data into the datafile
+    */
     datafile.print("," + vibration);
+    /*
+    This ends the line of data
+    */
     datafile.println();
   #endif
+  /*
+  If DEBUG is enabled, then log the values of the sensors to the computer
+  */
   #ifdef DEBUG
     Serial.print("dhtHumidity: ");
     Serial.print(String(dhtHumidity));
@@ -317,5 +446,8 @@ void loop() {
     }
     Serial.println();
   #endif
+  /*
+  Wait the constant in the LOOP_DELAY box in seconds, then loop again
+  */
   delay(LOOP_DELAY);
 }

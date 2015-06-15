@@ -289,11 +289,7 @@ If we have switched on the DATALOGGER constand, then enable the putData function
   /*
   This function puts data in the data file
   */
-  void putData(float data[]) {
-    /*
-    This calculates the length of an array (a set of values by dividing the length of the array (a set of values) by the length of a single value
-    */
-    int len = sizeof(data)/sizeof(*data);
+  void putData(float data[], int len) {
     /*
     This finds each value in the array (set of values)
     */
@@ -412,11 +408,11 @@ void loop() {
     /*
     Put our data into the datafile
     */
-    putData(data);
+    putData(data, 6);
     /*
     Put the vibration sensor data into the datafile
     */
-    datafile.print("," + vibration);
+    datafile.print("," + vibration ? '1' : '0');
     /*
     This ends the line of data
     */

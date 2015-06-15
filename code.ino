@@ -421,6 +421,10 @@ void loop() {
     This ends the line of data
     */
     datafile.println();
+    /*
+    Puts the data on the SD card
+    */
+    datafile.flush();
   #endif
   /*
   If DEBUG is enabled, then log the values of the sensors to the computer

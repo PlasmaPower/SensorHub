@@ -359,9 +359,9 @@ void loop() {
   */
   float solarPanel = readVoltage(SOLAR_PANEL_PIN) * 5 / AREF_VOLTAGE;
   /*
-  This code reads the resistance of the photocell
+  This code reads the resistance of the photocell in hecto Ohms from 1 (light) to 40 (dark)
   */
-  float photocell = readResistance(PHOTOCELL_PIN, PHOTOCELL_RESISTOR);
+  float photocell = readResistance(PHOTOCELL_PIN, PHOTOCELL_RESISTOR) / 100;
   /*
   The temperature sensor will always output 0.5 volts, and then every 0.01 volt after that is one degree celcius
   */

@@ -223,6 +223,25 @@ void setup() {
         Serial.println("Failed to initialize Real Time Clock");
       #endif
     }
+    
+    /*
+    If the RTC (Real Time Clock) is not working, run the next two lines of code
+    */
+    if (!RTC.isrunning()) {
+      /*
+      If we have enabled (switched on, defined) logging to the computer (DEBUG), then run the next line of code
+      */
+      #ifdef DEBUG
+        /*
+        Log to the computer that the RTC is being started
+        */
+        Serial.println("RTC is NOT running! Starting it at the time of compilation.");
+      #endif
+      /*
+      Set the RTC to the time that this was compiled on, and then start it.
+      */
+      RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    }
     /*
     Start getting data from the DHT (Humidity/Temperature Sensor)
     */

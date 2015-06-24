@@ -5,7 +5,6 @@ The #include means that the code is using other code (libraries) written by othe
 #include <Wire.h>
 #include <RTClib.h>
 #include <SD.h>
-#include <Wire.h>
 #include <DHT.h>
 
 /*

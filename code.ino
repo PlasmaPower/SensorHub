@@ -241,11 +241,11 @@ void setup() {
       */
       RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
     }
-    /*
-    Start getting data from the DHT (Humidity/Temperature Sensor)
-    */
-    dht.begin();
   #endif
+  /*
+  Start getting data from the DHT (Humidity/Temperature Sensor)
+  */
+  dht.begin();
 }
 /*
 This ends the setup function

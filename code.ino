@@ -95,7 +95,6 @@ This is the time of the last output
 */
 DateTime outputTime;
 
-
 /*
 This tells the code that a DHT is plugged into port DHT_PIN and the DHT is of type DHT_TYPE
 */
@@ -157,19 +156,19 @@ void setup() {
          Serial.println("Failed to initialize SD card");
        #endif
     }
-    
+
     /*
     Gets the current time for the ouput o the SD card
     */
     DateTime outputTime = RTC.now();
   #endif
-  
+
   /*
   If we have turned on the datalogger mode (defined it), then run the rest of the function
   */
   #ifdef DATALOGGER
     /*
-    The first filenumber we try to create is DATA0.csv 
+    The first filenumber we try to create is DATA0.csv
     */
     int filenumber = 0;
     /*
@@ -177,8 +176,8 @@ void setup() {
     */
     while (true) {
       /*
-      Set filename equal to DATA, then the file number, then .CSV 
-      Example "DATA4.CSV 
+      Set filename equal to DATA, then the file number, then .CSV
+      Example "DATA4.CSV
       */
       String filenameStr = "DATA" + String(filenumber) + ".CSV";
       /*
@@ -231,7 +230,7 @@ void setup() {
         Serial.println("Failed to initialize Real Time Clock");
       #endif
     }
-    
+
     /*
     If the RTC (Real Time Clock) is not working, run the next two lines of code
     */
@@ -342,7 +341,7 @@ If we have switched on the DATALOGGER constand, then enable the putData function
 
 /*
 This loop function occupies the rest of the code
-All of this code runs again and again. 
+All of this code runs again and again.
 */
 void loop() {
   /*
@@ -413,7 +412,7 @@ void loop() {
     /*
     Put the data into an array (a list)
     */
-    
+
     if(now.unixtime()*1000 - outputTime.unixtime() > OUTPUT_DELAY / 1000){
       float data[] = {dhtHumidity, dhtTemperature, thermTemperature, solarPanel, photocell, temperature};
       /*
@@ -434,7 +433,7 @@ void loop() {
       datafile.flush();
       outputTime = RTC.now();
     }
-    
+
   #endif
   /*
   If DEBUG is enabled, then log the values of the sensors to the computer

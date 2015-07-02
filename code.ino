@@ -16,7 +16,7 @@ DEBUG: Enables logging debug information to the computer
 DATALOGGER: Enables putting data in the SD card
 */
 #define DEBUG
-#define DATALOGGER
+//#define DATALOGGER
 
 /*
 These constants are tied to values
@@ -64,17 +64,12 @@ This #define defines the resistance of resistor c
 #define PHOTOCELL_RESISTOR 10000
 
 /*
-This is the coefficent in the Steinhart-hart equation
-(an equation used to find the temperature from a resistance)
-that we need to calibrate
-Usually from 3000-4000
+This are the coefficents in the thermistor equation
 */
-#define THERM_B_COEFFICIENT 3950
-/*
-These state that at 25 degrees celcius, the resistance is 10K ohms
-*/
-#define THERM_THERM_NOMINAL 10000
-#define THERM_TEMP_NOMINAL 25
+#define THERM_A_COEFFICIENT 0.003354015
+#define THERM_B_COEFFICIENT 0.000256277
+#define THERM_C_COEFFICIENT 0.000002082921
+#define THERM_D_COEFFICIENT 0.000000073003206
 
 /*
 This defines the voltage running through the circut
@@ -88,9 +83,18 @@ Devleoping a stable conversation takes more time
 #define ANALOG_READ_STABILITY 10
 /*
 This is how often the arduino talks with the sensors in milliseconds
-It then logs the data to the SD card
+It then sends it to the computer.
 */
-#define LOOP_DELAY 30000
+#define LOOP_DELAY 3000
+/*
+This is how often the arduino averages all the data and writes it to the SD card
+*/
+#define OUTPUT_DELAY 3600000
+/*
+This is the time of the last output
+*/
+DateTime outputTime;
+
 
 /*
 This tells the code that a DHT is plugged into port DHT_PIN and the DHT is of type DHT_TYPE
@@ -153,6 +157,11 @@ void setup() {
          Serial.println("Failed to initialize SD card");
        #endif
     }
+    
+    /*
+    Gets the current time for the ouput o the SD card
+    */
+    DateTime outputTime = RTC.now();
   #endif
   
   /*
@@ -241,11 +250,11 @@ void setup() {
       */
       RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
     }
+    /*
+    Start getting data from the DHT (Humidity/Temperature Sensor)
+    */
+    dht.begin();
   #endif
-  /*
-  Start getting data from the DHT (Humidity/Temperature Sensor)
-  */
-  dht.begin();
 }
 /*
 This ends the setup function
@@ -346,30 +355,12 @@ void loop() {
   float dhtTemperature = dht.readTemperature();
   /*
   This code gets the temperature from the termistor
-  For more information, see http://en.wikipedia.org/wiki/Steinhart%E2%80%93Hart_equation
-  This first line gets the resistance of the thermistor, then divides it by the constant in the THERM_THERM_NOMINAL box
   */
-  float thermTemperature = readResistance(THERM_PIN, THERM_RESISTOR) / THERM_THERM_NOMINAL;
-  /*
-  This code sets the temperature equal to the log of the current temperature
-  */
-  thermTemperature = log(thermTemperature);
-  /*
-  This code divides the temperature by the number in the THERM_B_COEFFICIENT box
-  */
-  thermTemperature /= THERM_B_COEFFICIENT;
-  /*
-  This code adds the inverse of the constant in the THERM_TEMP_NOMINAL box added to 273.15 (negative absolute zero in celcius)
-  */
-  thermTemperature += 1.0 / (THERM_TEMP_NOMINAL + 273.15);
-  /*
-  This code inverts the thermistor temperature
-  */
-  thermTemperature = 1.0 / thermTemperature;
-  /*
-  This code converts the temperature from Kelvin to Celsius by subtracting 273.15
-  */
-  thermTemperature -= 273.15;
+  double Vout = readVoltage(THERM_PIN);
+  double rt = (THERM_RESISTOR*(Vout/AREF_VOLTAGE))/(1-(Vout/AREF_VOLTAGE));
+  double ln = log(rt/THERM_RESISTOR);
+  double tempK = pow(THERM_A_COEFFICIENT+THERM_B_COEFFICIENT*ln+THERM_C_COEFFICIENT*(pow(ln, 2))+THERM_D_COEFFICIENT*(pow(ln,3)),(-1));
+  double thermTemperature = tempK-273.5;
   /*
   This code reads the voltage on the solar cell
   The arduino measures voltages from 0 volts to 3.3 volts sometimes, but the solar cell is from 0 volts to 5 volts
@@ -422,23 +413,28 @@ void loop() {
     /*
     Put the data into an array (a list)
     */
-    float data[] = {dhtHumidity, dhtTemperature, thermTemperature, solarPanel, photocell, temperature};
-    /*
-    Put our data into the datafile
-    */
-    putData(data, 6);
-    /*
-    Put the vibration sensor data into the datafile
-    */
-    datafile.print("," + vibration ? '1' : '0');
-    /*
-    This ends the line of data
-    */
-    datafile.println();
-    /*
-    Puts the data on the SD card
-    */
-    datafile.flush();
+    
+    if(now.unixtime()*1000 - outputTime.unixtime() > OUTPUT_DELAY / 1000){
+      float data[] = {dhtHumidity, dhtTemperature, thermTemperature, solarPanel, photocell, temperature};
+      /*
+      Put our data into the datafile
+      */
+      putData(data, 6);
+      /*
+      Put the vibration sensor data into the datafile
+      */
+      datafile.print("," + vibration ? '1' : '0');
+      /*
+      This ends the line of data
+      */
+      datafile.println();
+      /*
+      Puts the data on the SD card
+      */
+      datafile.flush();
+      outputTime = RTC.now();
+    }
+    
   #endif
   /*
   If DEBUG is enabled, then log the values of the sensors to the computer
